@@ -13,6 +13,7 @@ import ResumeAnalyzer from './pages/ResumeAnalyzer';
 import AnswerGenerator from './pages/AnswerGenerator';
 import ATSSimulator from './pages/ATSSimulator';
 import Analytics from './pages/Analytics';
+import CoverLetterGenerator from './pages/CoverLetterGenerator';
 
 function App() {
   return (
@@ -59,6 +60,11 @@ function App() {
             <Route path="/analytics" element={
               <Layout>
                 <Analytics />
+              </Layout>
+            } />
+            <Route path="/cover-letter" element={
+              <Layout>
+                <CoverLetterGenerator />
               </Layout>
             } />
 

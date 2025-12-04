@@ -13,7 +13,8 @@ import {
   Bell,
   Search,
   Eye,
-  BarChart3
+  BarChart3,
+  Mail
 } from 'lucide-react';
 
 const Layout = ({ children }) => {
@@ -27,6 +28,7 @@ const Layout = ({ children }) => {
     { name: 'Applications', href: '/applications', icon: Briefcase },
     { name: 'Resume Analyzer', href: '/resume-analyzer', icon: FileText },
     { name: 'ATS Simulator', href: '/ats-simulator', icon: Eye },
+    { name: 'Cover Letter', href: '/cover-letter', icon: Mail },
     { name: 'Answer Generator', href: '/answer-generator', icon: MessageSquare },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     { name: 'Profile', href: '/profile', icon: User },
