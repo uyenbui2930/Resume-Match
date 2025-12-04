@@ -11,7 +11,9 @@ import {
   Menu,
   X,
   Bell,
-  Search
+  Search,
+  Eye,
+  BarChart3
 } from 'lucide-react';
 
 const Layout = ({ children }) => {
@@ -24,7 +26,9 @@ const Layout = ({ children }) => {
     { name: 'Home', href: '/', icon: Home },
     { name: 'Applications', href: '/applications', icon: Briefcase },
     { name: 'Resume Analyzer', href: '/resume-analyzer', icon: FileText },
+    { name: 'ATS Simulator', href: '/ats-simulator', icon: Eye },
     { name: 'Answer Generator', href: '/answer-generator', icon: MessageSquare },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     { name: 'Profile', href: '/profile', icon: User },
   ];
 

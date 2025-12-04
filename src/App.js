@@ -11,6 +11,8 @@ import Profile from './pages/Profile';
 import Applications from './pages/Applications';
 import ResumeAnalyzer from './pages/ResumeAnalyzer';
 import AnswerGenerator from './pages/AnswerGenerator';
+import ATSSimulator from './pages/ATSSimulator';
+import Analytics from './pages/Analytics';
 
 function App() {
   return (
@@ -49,7 +51,17 @@ function App() {
                 <AnswerGenerator />
               </Layout>
             } />
-            
+            <Route path="/ats-simulator" element={
+              <Layout>
+                <ATSSimulator />
+              </Layout>
+            } />
+            <Route path="/analytics" element={
+              <Layout>
+                <Analytics />
+              </Layout>
+            } />
+
             {/* Optional Login/Register Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
