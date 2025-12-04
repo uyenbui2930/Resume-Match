@@ -1,27 +1,36 @@
 {
-  "name": "job-assistant-backend",
+  "name": "ai-job-assistant-frontend",
   "version": "1.0.0",
-  "description": "Job Assistant AI Backend",
-  "main": "src/server.js",
-  "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "description": "AI-Powered Job Application Assistant Frontend",
+  "private": true,
   "dependencies": {
-    "@google/genai": "^1.22.0",
-    "bcryptjs": "^3.0.2",
-    "cors": "^2.8.5",
-    "dotenv": "^17.2.2",
-    "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "mammoth": "^1.6.0",
-    "multer": "^2.0.2",
-    "openai": "^4.20.0",
-    "pdf-parse": "^1.1.1",
-    "pg": "^8.16.3"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.8.1",
+    "react-scripts": "5.0.1",
+    "axios": "^1.3.4",
+    "lucide-react": "^0.263.1",
+    "react-hot-toast": "^2.4.0"
   },
-  "devDependencies": {
-    "nodemon": "^3.1.10"
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }
