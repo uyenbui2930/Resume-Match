@@ -1,0 +1,404 @@
+# Job Assistant API Documentation
+
+**Base URL:** `http://localhost:3000`
+
+**All protected endpoints require:** `Authorization: Bearer <token>`
+
+---
+
+## Authentication
+
+### Register User
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "firstName": "John",
+  "lastName": "Doe",
+  "phone": "555-1234" (optional)
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "user": {
+      "id": 1,
+      "email": "user@example.com",
+      "firstName": "John",
+      "lastName": "Doe"
+    },
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+### Login
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response:** Same as register
+
+---
+
+## Resumes
+
+### Upload Resume
+```http
+POST /api/resumes/upload
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+resume: <file> (PDF, DOC, DOCX, TXT)
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Resume uploaded successfully",
+  "data": {
+    "id": 1,
+    "filename": "john_doe_resume.pdf",
+    "size": 245678,
+    "uploadDate": "2025-09-27T10:30:00Z"
+  }
+}
+```
+
+### Get My Resumes
+```http
+GET /api/resumes/my-resumes
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "resumes": [
+      {
+        "id": 1,
+        "filename": "john_doe_resume.pdf",
+        "created_at": "2025-09-27T10:30:00Z"
+      }
+    ],
+    "count": 1
+  }
+}
+```
+
+### Get Resume Details
+```http
+GET /api/resumes/:id
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "filename": "john_doe_resume.pdf",
+    "contentText": "Resume content...",
+    "createdAt": "2025-09-27T10:30:00Z"
+  }
+}
+```
+
+---
+
+## Job Applications
+
+### Create Application
+```http
+POST /api/applications
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "resumeId": 1,
+  "companyName": "Tech Corp",
+  "jobTitle": "Software Engineer",
+  "jobDescription": "We are looking for...",
+  "applicationUrl": "https://techcorp.com/jobs/123",
+  "notes": "Applied via LinkedIn"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Job application created successfully",
+  "data": {
+    "id": 1,
+    "company_name": "Tech Corp",
+    "job_title": "Software Engineer",
+    "status": "not_submitted",
+    "created_at": "2025-09-27T11:00:00Z"
+  }
+}
+```
+
+### Get My Applications
+```http
+GET /api/applications/my-applications
+Authorization: Bearer <token>
+
+Query Parameters:
+  - status (optional): Filter by status
+  - limit (optional): Number of results (default: 50)
+  - offset (optional): Pagination offset (default: 0)
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "applications": [
+      {
+        "id": 1,
+        "company_name": "Tech Corp",
+        "job_title": "Software Engineer",
+        "status": "submitted",
+        "resume_filename": "john_doe_resume.pdf",
+        "created_at": "2025-09-27T11:00:00Z",
+        "updated_at": "2025-09-27T12:00:00Z"
+      }
+    ],
+    "count": 1
+  }
+}
+```
+
+### Update Application Status
+```http
+PATCH /api/applications/:id/status
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "status": "interview_requested",
+  "notes": "Phone screen scheduled for tomorrow"
+}
+```
+
+**Valid Statuses:**
+- `not_submitted`
+- `submitted`
+- `received_response`
+- `interview_requested`
+- `rejected_after_interview`
+- `onsite_interview_requested`
+- `offer_received`
+- `rejected`
+- `accepted`
+
+---
+
+## AI Agents
+
+### Score Resume
+```http
+POST /api/agents/resume-scorer
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "resumeText": "John Doe, Software Engineer...",
+  "jobDescription": "We are seeking a developer with..."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "task": "score-resume",
+  "executionTime": 1234,
+  "data": {
+    "agentType": "resume-scorer",
+    "score": 85,
+    "matchedSkills": ["JavaScript", "React", "Node.js"],
+    "missingSkills": ["Docker", "AWS"],
+    "recommendations": [
+      "Excellent match! Your resume aligns well with this job posting",
+      "Consider highlighting these missing skills if you have them: Docker, AWS"
+    ]
+  }
+}
+```
+
+### Generate Answers
+```http
+POST /api/agents/generate-answers
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "resumeText": "John Doe, Software Engineer...",
+  "jobDescription": "We are seeking...",
+  "questions": [
+    "Why are you interested in this role?",
+    "What makes you a good fit?"
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "task": "generate-answers",
+  "data": {
+    "agentType": "answer-generator",
+    "questions": ["Why are you interested...", "What makes you..."],
+    "answers": ["I'm excited about this opportunity...", "I believe I'm an excellent fit..."],
+    "tips": ["Customize each answer...", "Use specific examples..."]
+  }
+}
+```
+
+### Extract Profile
+```http
+POST /api/agents/extract-profile
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "resumeText": "John Doe\njohn@example.com..."
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "task": "prepare-autofill",
+  "data": {
+    "agentType": "autofill-agent",
+    "profileData": {
+      "personalInfo": { "firstName": "John", "lastName": "Doe" },
+      "contact": { "email": "john@example.com", "phone": "555-1234" },
+      "workExperience": [...],
+      "education": [...],
+      "skills": {...}
+    },
+    "confidence": 85,
+    "extractedFields": ["personalInfo.firstName", "contact.email", ...]
+  }
+}
+```
+
+---
+
+## Dashboard
+
+### Get Overview
+```http
+GET /api/dashboard/overview
+Authorization: Bearer <token>
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "totalApplications": 15,
+      "totalResumes": 3,
+      "statusBreakdown": {
+        "not_submitted": 2,
+        "submitted": 8,
+        "interview_requested": 3,
+        "rejected": 2
+      }
+    },
+    "recentActivity": [...],
+    "agentUsage": [...]
+  }
+}
+```
+
+### Get Status Analytics
+```http
+GET /api/dashboard/analytics/status?timeframe=30
+Authorization: Bearer <token>
+```
+
+### Get Application Pipeline
+```http
+GET /api/dashboard/pipeline
+Authorization: Bearer <token>
+```
+
+---
+
+## Error Responses
+
+All errors follow this format:
+```json
+{
+  "success": false,
+  "message": "Error description"
+}
+```
+
+**Common Status Codes:**
+- `400` - Bad Request (missing/invalid data)
+- `401` - Unauthorized (missing/invalid token)
+- `404` - Not Found
+- `500` - Internal Server Error
+
+---
+
+## Testing with curl
+
+**Register:**
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"test123","firstName":"Test","lastName":"User"}'
+```
+
+**Login & Save Token:**
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"test123"}'
+```
+
+**Use Token:**
+```bash
+curl http://localhost:3000/api/resumes/my-resumes \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+---
+
+## Notes for Frontend Developer
+
+1. **CORS is enabled** - you can call from localhost:3001, localhost:5173, etc.
+2. **All timestamps are in ISO 8601 format**
+3. **File uploads use multipart/form-data**, all others use application/json
+4. **Store the JWT token** in localStorage or sessionStorage after login
+5. **Include token in all protected requests** via Authorization header
+6. **Test with sample data** - let backend know if you need test accounts
