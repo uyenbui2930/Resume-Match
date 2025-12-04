@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import {
@@ -15,11 +15,14 @@ import {
   DollarSign,
   MessageSquare,
   User,
-  LogIn
+  LogIn,
+  Loader2
 } from 'lucide-react';
+import { dashboardAPI } from '../services/api';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalApplications: 0,
     submitted: 0,
@@ -32,94 +35,100 @@ const Dashboard = () => {
   const [upcomingInterviews, setUpcomingInterviews] = useState([]);
   const [aiInsights, setAiInsights] = useState([]);
 
+  // Fetch dashboard data from API
+  const fetchDashboardData = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      // Show demo data for non-logged in users
+      setStats({ totalApplications: 0, submitted: 0, interviews: 0, offers: 0, rejections: 0 });
+      setRecentApplications([]);
+      setUpcomingInterviews([]);
+      setAiInsights([
+        {
+          id: 1,
+          type: 'info',
+          title: 'Get Started',
+          description: 'Sign up to track your job applications and get AI-powered insights',
+          action: 'View Applications'
+        }
+      ]);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await dashboardAPI.getOverview();
+      const data = response.data;
+
+      if (data.success && data.data) {
+        const overview = data.data;
+
+        // Set stats from API
+        setStats({
+          totalApplications: overview.stats?.totalApplications || 0,
+          submitted: overview.stats?.submitted || 0,
+          interviews: overview.stats?.interviews || 0,
+          offers: overview.stats?.offers || 0,
+          rejections: overview.stats?.rejections || 0
+        });
+
+        // Set recent applications
+        if (overview.recentApplications) {
+          setRecentApplications(overview.recentApplications.map(app => ({
+            id: app.id,
+            company: app.company_name,
+            position: app.job_title,
+            status: app.status,
+            appliedDate: app.applied_date,
+            location: app.location || 'Not specified',
+            salary: app.salary_range || 'Not specified',
+            matchScore: app.match_score || 0
+          })));
+        }
+
+        // Set upcoming interviews
+        if (overview.upcomingInterviews) {
+          setUpcomingInterviews(overview.upcomingInterviews);
+        }
+
+        // Set AI insights
+        if (overview.aiInsights) {
+          setAiInsights(overview.aiInsights);
+        } else {
+          setAiInsights([
+            {
+              id: 1,
+              type: 'info',
+              title: 'AI Analysis Ready',
+              description: 'Use the Resume Analyzer to get personalized job matching insights',
+              action: 'Analyze Resume'
+            }
+          ]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      // Set empty state on error
+      setStats({ totalApplications: 0, submitted: 0, interviews: 0, offers: 0, rejections: 0 });
+      setRecentApplications([]);
+      setUpcomingInterviews([]);
+      setAiInsights([
+        {
+          id: 1,
+          type: 'warning',
+          title: 'Connection Issue',
+          description: 'Could not load dashboard data. Please check your connection.',
+          action: 'View Applications'
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
-    // Mock data - replace with actual API calls
-    setStats({
-      totalApplications: 24,
-      submitted: 18,
-      interviews: 5,
-      offers: 2,
-      rejections: 4
-    });
-
-    setRecentApplications([
-      {
-        id: 1,
-        company: 'TechCorp',
-        position: 'Senior Software Engineer',
-        status: 'interview_requested',
-        appliedDate: '2024-01-15',
-        location: 'San Francisco, CA',
-        salary: '$120k - $150k',
-        matchScore: 85
-      },
-      {
-        id: 2,
-        company: 'StartupXYZ',
-        position: 'Full Stack Developer',
-        status: 'submitted',
-        appliedDate: '2024-01-14',
-        location: 'Remote',
-        salary: '$90k - $120k',
-        matchScore: 72
-      },
-      {
-        id: 3,
-        company: 'BigTech Inc',
-        position: 'AI Engineer',
-        status: 'rejected',
-        appliedDate: '2024-01-10',
-        location: 'Seattle, WA',
-        salary: '$130k - $160k',
-        matchScore: 68
-      }
-    ]);
-
-    setUpcomingInterviews([
-      {
-        id: 1,
-        company: 'TechCorp',
-        position: 'Senior Software Engineer',
-        date: '2024-01-20',
-        time: '2:00 PM',
-        type: 'Phone Screen',
-        interviewer: 'Sarah Johnson'
-      },
-      {
-        id: 2,
-        company: 'InnovateLab',
-        position: 'Product Manager',
-        date: '2024-01-22',
-        time: '10:00 AM',
-        type: 'Video Interview',
-        interviewer: 'Mike Chen'
-      }
-    ]);
-
-    setAiInsights([
-      {
-        id: 1,
-        type: 'success',
-        title: 'High Match Score',
-        description: 'Your resume matches 85% of the requirements for Senior Software Engineer at TechCorp',
-        action: 'View Analysis'
-      },
-      {
-        id: 2,
-        type: 'warning',
-        title: 'Skills Gap Identified',
-        description: 'Consider highlighting your React experience for better match scores',
-        action: 'Update Resume'
-      },
-      {
-        id: 3,
-        type: 'info',
-        title: 'Application Trend',
-        description: 'You\'ve applied to 5 companies this week. Great momentum!',
-        action: 'View Applications'
-      }
-    ]);
-  }, []);
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
 
   const getStatusColor = (status) => {

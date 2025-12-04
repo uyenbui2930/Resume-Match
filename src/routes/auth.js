@@ -2,11 +2,33 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
+const { authenticateToken } = require('../middleware/auth');
 
 // Make sure environment variables are loaded
 require('dotenv').config();
 
 const router = express.Router();
+
+// Get current user (verify token and return user info)
+router.get('/me', authenticateToken, async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        firstName: req.user.first_name,
+        lastName: req.user.last_name
+      }
+    });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get user information'
+    });
+  }
+});
 
 // Register user
 router.post('/register', async (req, res) => {

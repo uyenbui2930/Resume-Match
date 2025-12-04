@@ -11,13 +11,17 @@ import {
   BarChart3
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { agentsAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const ResumeAnalyzer = () => {
+  const { user } = useAuth();
   const [uploadedFile, setUploadedFile] = useState(null);
   const [jobDescription, setJobDescription] = useState('');
   const [analysis, setAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
   const [resumeText, setResumeText] = useState('');
+  const [useAI, setUseAI] = useState(true); // Toggle between AI and local analysis
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
@@ -33,11 +37,40 @@ const ResumeAnalyzer = () => {
     }
 
     setLoading(true);
-    
+
     try {
-      // Generate AI-powered analysis based on resume and job description
-      const analysis = generateAIAnalysis(resumeText, jobDescription);
-      setAnalysis(analysis);
+      // Try AI-powered analysis via backend if user is logged in
+      if (user && useAI) {
+        try {
+          const response = await agentsAPI.scoreResume(resumeText, jobDescription);
+          const data = response.data;
+
+          if (data.success && data.data) {
+            // Transform backend response to match frontend format
+            const backendAnalysis = data.data;
+            setAnalysis({
+              matchScore: backendAnalysis.score || 75,
+              strengths: backendAnalysis.strengths || ['Strong technical background'],
+              improvements: backendAnalysis.recommendations || ['Add more quantifiable achievements'],
+              missingSkills: backendAnalysis.missingSkills || [],
+              recommendations: backendAnalysis.recommendations || [],
+              keywordAnalysis: {
+                matched: backendAnalysis.matchedSkills || [],
+                missing: backendAnalysis.missingSkills || []
+              }
+            });
+            toast.success('AI-powered analysis completed!');
+            return;
+          }
+        } catch (apiError) {
+          console.log('Backend API unavailable, using local analysis:', apiError.message);
+          toast.info('Using local analysis (backend unavailable)');
+        }
+      }
+
+      // Fallback to local analysis
+      const localAnalysis = generateAIAnalysis(resumeText, jobDescription);
+      setAnalysis(localAnalysis);
       toast.success('Resume analysis completed!');
     } catch (error) {
       console.error('Resume analysis error:', error);

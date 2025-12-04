@@ -10,14 +10,18 @@ import {
   Lightbulb
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { agentsAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const AnswerGenerator = () => {
+  const { user } = useAuth();
   const [jobDescription, setJobDescription] = useState('');
   const [resumeText, setResumeText] = useState('');
   const [questions, setQuestions] = useState([]);
   const [generatedAnswers, setGeneratedAnswers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [editingAnswer, setEditingAnswer] = useState(null);
+  const [useAI, setUseAI] = useState(true);
 
   // Generate personalized answer based on question, resume, and job description
   const generatePersonalizedAnswer = (question, resume, jobDescription) => {
@@ -217,9 +221,42 @@ const AnswerGenerator = () => {
     }
 
     setLoading(true);
-    
+
     try {
-      // Generate personalized answers based on resume and job description
+      // Try AI-powered generation via backend if user is logged in
+      if (user && useAI) {
+        try {
+          const response = await agentsAPI.generateAnswers(resumeText, jobDescription, questions);
+          const data = response.data;
+
+          if (data.success && data.data) {
+            const backendAnswers = data.data.answers || [];
+            const formattedAnswers = backendAnswers.map((item, index) => ({
+              id: index + 1,
+              question: item.question || questions[index],
+              answer: item.answer || '',
+              tips: item.tips || [
+                'Use specific examples from your experience',
+                'Connect your skills to the job requirements',
+                'Show enthusiasm for the role and company',
+                'Quantify your achievements when possible'
+              ],
+              feedback: null
+            }));
+
+            if (formattedAnswers.length > 0) {
+              setGeneratedAnswers(formattedAnswers);
+              toast.success('AI-powered answers generated!');
+              return;
+            }
+          }
+        } catch (apiError) {
+          console.log('Backend API unavailable, using local generation:', apiError.message);
+          toast.info('Using local generation (backend unavailable)');
+        }
+      }
+
+      // Fallback to local generation
       const personalizedAnswers = questions.map((question, index) => ({
         id: index + 1,
         question,
@@ -232,7 +269,7 @@ const AnswerGenerator = () => {
         ],
         feedback: null
       }));
-      
+
       setGeneratedAnswers(personalizedAnswers);
       toast.success('Answers generated successfully!');
     } catch (error) {

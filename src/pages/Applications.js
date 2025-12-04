@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import {
@@ -14,9 +14,11 @@ import {
   Star,
   Briefcase,
   User,
-  LogIn
+  LogIn,
+  Loader2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { applicationsAPI } from '../services/api';
 
 const Applications = () => {
   const { user } = useAuth();
@@ -26,6 +28,7 @@ const Applications = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [editingApplication, setEditingApplication] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [editForm, setEditForm] = useState({
     position: '',
     company: '',
@@ -46,79 +49,49 @@ const Applications = () => {
     { value: 'rejected', label: 'Rejected', count: 0 }
   ];
 
-  useEffect(() => {
-    // Mock data - replace with actual API calls
-    const mockApplications = [
-      {
-        id: 1,
-        company: 'TechCorp',
-        position: 'Senior Software Engineer',
-        status: 'interview_requested',
-        appliedDate: '2024-01-15',
-        location: 'San Francisco, CA',
-        salary: '$120k - $150k',
-        matchScore: 85,
-        jobDescription: 'We are looking for a senior software engineer...',
-        notes: 'Applied through LinkedIn referral',
-        nextAction: 'Prepare for phone interview on Jan 20th'
-      },
-      {
-        id: 2,
-        company: 'StartupXYZ',
-        position: 'Full Stack Developer',
-        status: 'submitted',
-        appliedDate: '2024-01-14',
-        location: 'Remote',
-        salary: '$90k - $120k',
-        matchScore: 72,
-        jobDescription: 'Join our fast-growing startup...',
-        notes: 'Found through job board',
-        nextAction: 'Wait for response'
-      },
-      {
-        id: 3,
-        company: 'BigTech Inc',
-        position: 'AI Engineer',
-        status: 'rejected',
-        appliedDate: '2024-01-10',
-        location: 'Seattle, WA',
-        salary: '$130k - $160k',
-        matchScore: 68,
-        jobDescription: 'Work on cutting-edge AI projects...',
-        notes: 'Need more ML experience',
-        nextAction: 'Improve ML skills'
-      },
-      {
-        id: 4,
-        company: 'InnovateLab',
-        position: 'Product Manager',
-        status: 'offer_received',
-        appliedDate: '2024-01-08',
-        location: 'New York, NY',
-        salary: '$110k - $140k',
-        matchScore: 92,
-        jobDescription: 'Lead product development...',
-        notes: 'Great culture fit',
-        nextAction: 'Review offer details'
-      },
-      {
-        id: 5,
-        company: 'DataFlow',
-        position: 'Data Scientist',
-        status: 'not_submitted',
-        appliedDate: null,
-        location: 'Austin, TX',
-        salary: '$100k - $130k',
-        matchScore: 78,
-        jobDescription: 'Analyze large datasets...',
-        notes: 'Draft application',
-        nextAction: 'Submit application'
-      }
-    ];
+  // Fetch applications from API
+  const fetchApplications = useCallback(async () => {
+    if (!user) {
+      setLoading(false);
+      setApplications([]);
+      return;
+    }
 
-    setApplications(mockApplications);
-    setFilteredApplications(mockApplications);
-  }, []);
+    try {
+      setLoading(true);
+      const response = await applicationsAPI.getAll();
+      const data = response.data;
+
+      if (data.success && data.data) {
+        // Transform backend data to frontend format
+        const formattedApplications = data.data.map(app => ({
+          id: app.id,
+          company: app.company_name,
+          position: app.job_title,
+          status: app.status,
+          appliedDate: app.applied_date,
+          location: app.location || 'Not specified',
+          salary: app.salary_range || 'Not specified',
+          matchScore: app.match_score || 0,
+          jobDescription: app.job_description,
+          notes: app.notes,
+          nextAction: app.next_action || ''
+        }));
+        setApplications(formattedApplications);
+      }
+    } catch (error) {
+      console.error('Failed to fetch applications:', error);
+      // Show demo data if API fails
+      toast.error('Could not load applications from server');
+      setApplications([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchApplications();
+  }, [fetchApplications]);
 
   useEffect(() => {
     let filtered = applications;
@@ -216,11 +189,19 @@ const Applications = () => {
     });
   };
 
-  const handleDeleteApplication = (applicationId) => {
+  const handleDeleteApplication = async (applicationId) => {
     const application = applications.find(app => app.id === applicationId);
     if (application && window.confirm(`Are you sure you want to delete the application for ${application.position} at ${application.company}?`)) {
-      setApplications(applications.filter(app => app.id !== applicationId));
-      toast.success('Application deleted successfully');
+      try {
+        if (user) {
+          await applicationsAPI.delete(applicationId);
+        }
+        setApplications(applications.filter(app => app.id !== applicationId));
+        toast.success('Application deleted successfully');
+      } catch (error) {
+        console.error('Delete error:', error);
+        toast.error('Failed to delete application');
+      }
     }
   };
 
