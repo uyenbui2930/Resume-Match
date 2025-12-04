@@ -14,6 +14,8 @@ import AnswerGenerator from './pages/AnswerGenerator';
 import ATSSimulator from './pages/ATSSimulator';
 import Analytics from './pages/Analytics';
 import CoverLetterGenerator from './pages/CoverLetterGenerator';
+import ResumeBank from './pages/ResumeBank';
+import ResumeCustomizer from './pages/ResumeCustomizer';
 
 function App() {
   return (
@@ -65,6 +67,16 @@ function App() {
             <Route path="/cover-letter" element={
               <Layout>
                 <CoverLetterGenerator />
+              </Layout>
+            } />
+            <Route path="/resume-bank" element={
+              <Layout>
+                <ResumeBank />
+              </Layout>
+            } />
+            <Route path="/resume-customizer" element={
+              <Layout>
+                <ResumeCustomizer />
               </Layout>
             } />
 

@@ -14,7 +14,9 @@ import {
   Search,
   Eye,
   BarChart3,
-  Mail
+  Mail,
+  FolderOpen,
+  Wand2
 } from 'lucide-react';
 
 const Layout = ({ children }) => {
@@ -26,6 +28,8 @@ const Layout = ({ children }) => {
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Applications', href: '/applications', icon: Briefcase },
+    { name: 'Resume Bank', href: '/resume-bank', icon: FolderOpen },
+    { name: 'Resume Customizer', href: '/resume-customizer', icon: Wand2 },
     { name: 'Resume Analyzer', href: '/resume-analyzer', icon: FileText },
     { name: 'ATS Simulator', href: '/ats-simulator', icon: Eye },
     { name: 'Cover Letter', href: '/cover-letter', icon: Mail },
